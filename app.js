@@ -3,7 +3,10 @@ const express = require("express");
 const ejs = require("ejs");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
-const encrypt = require("mongoose-encryption");
+//const encrypt = require("mongoose-encryption");
+//const md5 = require("md5");
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
 
 const app = express();
 
@@ -19,7 +22,7 @@ const userSchema = new mongoose.Schema({
     password: String
 });
 
-userSchema.plugin(encrypt, {secret: process.env.SECRETTEXT, encryptedFields: ["password"]});
+//userSchema.plugin(encrypt, {secret: process.env.SECRETTEXT, encryptedFields: ["password"]});
 
 const User = new mongoose.model("User", userSchema);
 
@@ -42,12 +45,14 @@ app.post("/register", function(req, res){
     User.findOne({email: username}, function(err, foundObject){
         if(!err){
             if(!foundObject){
-                const newUser = new User({
-                    email: username,
-                    password: userPassword
+                bcrypt.hash(userPassword, saltRounds, function(err, hash) {
+                    const newUser = new User({
+                        email: username,
+                        password: hash
+                    });
+                    newUser.save();
+                    res.render("secrets");
                 });
-                newUser.save();
-                res.render("secrets");
             } else{
                 console.log("user already exists");
                 res.redirect("/");
@@ -64,21 +69,19 @@ app.post("/login", function(req, res){
 
     User.findOne({email: username}, function(err, foundObject){
         if(!err){
-            if(foundObject.password === userPassword){
-                res.render("secrets");
-            } else{
-                console.log("wrong password");
-                res.redirect("/login");
-            }
+            bcrypt.compare(userPassword, foundObject.password, function(err, result) {
+                if(result){
+                    res.render("secrets");
+                } else{
+                    console.log("wrong password");
+                    res.redirect("/login");
+                }
+            });
         } else{
             console.log(err);
         }
     });
 });
-
-
-
-
 
 
 let port = 3000;
