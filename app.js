@@ -95,7 +95,6 @@ app.get("/auth/google",
   passport.authenticate("google", { scope: ["profile"] })
 );
 
-//google
 app.get("/auth/google/wisp", 
   passport.authenticate("google", { failureRedirect: "/login" }),
   function(req, res) {
@@ -103,6 +102,20 @@ app.get("/auth/google/wisp",
     res.redirect("/wisps");
     }
 );
+
+//facebook
+app.get("/auth/facebook",
+  passport.authenticate("facebook")
+);
+
+app.get("/auth/facebook/wisp",
+  passport.authenticate("facebook", { failureRedirect: "/login" }),
+  function(req, res) {
+    // Successful authentication, redirect home.
+    res.redirect("/wisps");
+  }
+);
+
 
 app.get("/register", function(req, res){
     res.render("register");
