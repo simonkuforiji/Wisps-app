@@ -9,8 +9,6 @@ const passportLocalMongoose = require("passport-local-mongoose");
 const findOrCreate = require("mongoose-findorcreate");
 //google
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-//facebook
-const FacebookStrategy = require('passport-facebook').Strategy;
 
 
 const app = express();
@@ -39,8 +37,6 @@ const userSchema = new mongoose.Schema({
     wisp: String,
     //google
     googleId: String,
-    //facebook
-    facebookId: String
 });
 
 userSchema.plugin(passportLocalMongoose);
@@ -73,18 +69,6 @@ passport.use(new GoogleStrategy({
       });
     }
 ));
-//facebook
-passport.use(new FacebookStrategy({
-    clientID: process.env.FACEBOOK_APP_ID,
-    clientSecret: process.env.FACEBOOK_APP_SECRET,
-    callbackURL: "http://localhost:3000/auth/facebook/wisp"
-  },
-  function(accessToken, refreshToken, profile, cb) {
-    User.findOrCreate({ facebookId: profile.id }, function (err, user) {
-      return cb(err, user);
-    });
-  }
-));
 
 app.get("/", function(req, res){
     res.render("home");
@@ -102,20 +86,6 @@ app.get("/auth/google/wisp",
     res.redirect("/wisps");
     }
 );
-
-//facebook
-app.get("/auth/facebook",
-  passport.authenticate("facebook")
-);
-
-app.get("/auth/facebook/wisp",
-  passport.authenticate("facebook", { failureRedirect: "/login" }),
-  function(req, res) {
-    // Successful authentication, redirect home.
-    res.redirect("/wisps");
-  }
-);
-
 
 app.get("/register", function(req, res){
     res.render("register");
